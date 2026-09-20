@@ -63,7 +63,7 @@ def tick(con, zones, sensor, w, mode, demo, scenario, cfg):
             rain_mm = demo_mod.get_demo_weather_at(scenario, now_dt)[1] if demo and scenario else 0.0
             m = sensor.tick(zone, crop, 5.0 / 60.0, valve_open, rain_mm, w)
             db.insert_reading(con, zid, now_iso, m, None, "sim")
-        readings = db.get_recent_readings(con, zid, 24)
+        readings = db.get_recent_readings(con, zid, 48)
         zone = next((z for z in db.get_zones(con) if z["id"] == zid), zone)
         rec = engine.decide(zone, crop, readings, w, now_iso, local_min, cfg)
         alerts.check_alerts(con, zone, readings, w, rec, cfg)
