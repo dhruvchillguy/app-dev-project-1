@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { configureDemo, fromIso } from "./clock.js";
+import { configureDemo, fromIso, toIso } from "./clock.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -54,4 +54,17 @@ export function getDropoutZones(scenario, nowDt) {
     if (s <= nowDt && nowDt <= e) active.add(ev.zone_id);
   }
   return active;
+}
+
+export function getDemoWeatherObject(scenario, nowDt) {
+  const [wkm, rMm] = getDemoWeatherAt(scenario, nowDt);
+  const [fMm, fProb] = getDemoForecastAt(scenario, nowDt);
+  const times = Array.from({ length: 12 }, (_, i) => toIso(new Date(nowDt.getTime() + (i + 1) * 3600000)));
+  return {
+    wind_kmh: wkm, temperature_c: 30.0, current_precip_mm: rMm,
+    hourly_times: times, hourly_precip_mm: new Array(12).fill(fMm / 12.0),
+    hourly_precip_prob: new Array(12).fill(fProb), hourly_evaporation_mm: new Array(12).fill(0.3),
+    hourly_wind_kmh: new Array(12).fill(wkm), hourly_temp_c: new Array(12).fill(30.0),
+    source: "scripted", fetched_at: toIso(nowDt)
+  };
 }

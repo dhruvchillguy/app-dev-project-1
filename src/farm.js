@@ -4,7 +4,7 @@ import { decide } from "./engine.js";
 import { checkAlerts } from "./alerts.js";
 import { maybeOpenSkip, resolveDueSkips } from "./ledger.js";
 import { checkMaxRuntime, handleAuto, openValve, closeValve } from "./valves.js";
-import { setupDemo, getDemoWeatherAt, getDemoForecastAt, getDropoutZones } from "./demo.js";
+import { setupDemo, getDemoWeatherAt, getDemoWeatherObject, getDropoutZones } from "./demo.js";
 import { SimulatedSensor } from "./sensors.js";
 import { getWeather } from "./weather.js";
 
@@ -87,17 +87,8 @@ export async function runHeadless(dbPath, cfg, mode, demo, speed, seed, source, 
       if (!demo) {
         w = await getWeather(db, cfg);
       } else if (scenario) {
-        const [wkm, rMm] = getDemoWeatherAt(scenario, now());
-        if (rMm > 0) upsertRainObs(db, hb.slice(0, 13) + ":00:00Z", rMm);
-        const [fMm, fProb] = getDemoForecastAt(scenario, now());
-        const times = Array.from({ length: 12 }, (_, i) => toIso(new Date(now().getTime() + (i + 1) * 3600000)));
-        w = {
-          wind_kmh: wkm, temperature_c: 30.0, current_precip_mm: rMm,
-          hourly_times: times, hourly_precip_mm: new Array(12).fill(fMm / 12.0),
-          hourly_precip_prob: new Array(12).fill(fProb), hourly_evaporation_mm: new Array(12).fill(0.3),
-          hourly_wind_kmh: new Array(12).fill(wkm), hourly_temp_c: new Array(12).fill(30.0),
-          source: "scripted", fetched_at: hb
-        };
+        w = getDemoWeatherObject(scenario, now());
+        if (w.current_precip_mm > 0) upsertRainObs(db, hb.slice(0, 13) + ":00:00Z", w.current_precip_mm);
       }
       tick(db, currentZones, sensor, w, mode, demo, scenario, cfg);
       tickCount++;
