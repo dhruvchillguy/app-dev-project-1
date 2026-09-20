@@ -11,6 +11,7 @@
     "headless": "node --no-warnings --import tsx src/index.js run --headless --demo",
     "mcp": "node --no-warnings src/mcp-server.js",
     "doctor": "node --no-warnings --import tsx src/index.js doctor",
+    "pdf": "node scripts/generate-pdf.js",
     "test": "vitest run"
   },
   "dependencies": {
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "ink-testing-library": "^4.0.0",
+    "marked": "^18.0.13",
     "tsx": "^4.19.0",
     "vitest": "^3.0.0"
   },
