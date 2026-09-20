@@ -1,37 +1,9 @@
 from textual.app import ComposeResult
-from textual.widgets import Static, Sparkline
+from textual.widgets import Static
 from textual.containers import VerticalScroll
-from sinchai import clock, db, engine, ledger, reports
+from sinchai import db, ledger, reports
 from sinchai.dashboard import DashboardScreen
-
-class ZoneScreen(Static):
-    def __init__(self, app_ref):
-        super().__init__()
-        self.app_ref = app_ref
-
-    def compose(self):
-        yield VerticalScroll(id="zone-detail")
-
-    def refresh_data(self):
-        con = self.app_ref.con
-        if con is None:
-            return
-        detail = self.query_one("#zone-detail")
-        detail.remove_children()
-        cfg = self.app_ref.cfg
-        now_iso = clock.to_iso(clock.now())
-        local_min = clock.local_minutes(clock.now(), cfg["location"]["utc_offset_minutes"])
-        for zone in db.get_zones(con):
-            crop = db.get_crop(con, zone["crop"])
-            readings = db.get_recent_readings(con, zone["id"], 120)
-            rec = engine.decide(zone, crop, readings, self.app_ref.weather_data, now_iso, local_min, cfg)
-            hist = [r["moisture_pct"] for r in reversed(readings)]
-            hrs = f"{rec['hours_until']:.1f}h" if rec.get("hours_until") is not None else "unknown"
-            v_str = "OPEN" if zone["valve_open"] else "closed"
-            text = f"{zone['name']} ({zone['crop']}) | area {zone['area_m2']} m2 | {zone['irrigation']}\n  Action: {rec['action']} | {rec['reason']}\n  Time until min: {hrs} | Valve: {v_str}"
-            detail.mount(Static(text))
-            if hist:
-                detail.mount(Sparkline(hist, summary_function=max))
+from sinchai.zone_view import ZoneScreen
 
 class ReportsScreen(Static):
     def __init__(self, app_ref):

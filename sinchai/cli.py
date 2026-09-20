@@ -12,6 +12,7 @@ def _setup_logging(db_path):
 
 def cmd_run(args):
     from sinchai import farm
+    if args.demo and args.mode == "manual": args.mode = "auto"
     cfg = config.get_config(args.db)
     if args.headless:
         _setup_logging(args.db)
