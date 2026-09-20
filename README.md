@@ -25,11 +25,24 @@ sinchai run --demo
 ## Commands
 
 - `sinchai run`: Start the terminal interface.
-  - `--demo`: Run with scripted demo time and events.
+  - `--demo`: Run with scripted demo time and events (starts in AUTO mode).
   - `--auto`: Enable automatic valve opening and closing.
   - `--source sim`: Use simulated sensors (default).
   - `--source serial --port PORT`: Read real JSON lines from serial.
   - `--speed SPEED`: Clock acceleration factor for demo (default 1800).
+
+### Keyboard Controls
+
+- `d`: Switch to **Dashboard** tab (status bar, simulated banner, zone table, weather panel, alerts feed).
+- `z`: Switch to **Zones** tab (selected zone details, 120-reading moisture sparkline, engine trace).
+- `r`: Switch to **Reports** tab (litres used per zone, 7-day baseline comparison, stress hours).
+- `l`: Switch to **Rain-check** tab (weather ledger with HIT/MISS verdicts and moisture low point).
+- `s`: Switch to **Settings** tab (interactive inputs for location, calibration, zone overrides, and mode switch).
+- `v`: Open or close the selected zone valve (1-second debounce, safety runtime limit).
+- `m`: Toggle between MANUAL and AUTO mode.
+- `a`: Acknowledge active alerts.
+- `t`: Toggle light/dark theme.
+- `q`: Quit the application.
   - `--seed SEED`: Random seed for sensor simulation.
   - `--headless`: Run controller loop without launching the TUI.
   - `--ticks N`: Run for N ticks and exit cleanly.
@@ -86,7 +99,7 @@ The system opens a row in the `skips` ledger recording the forecast amount, prob
 Important: "actual rain" in the ledger comes from Open-Meteo hourly weather observations, not an on-farm physical rain gauge.
 
 Real ledger output from a demo run:
-`2 skips: 2 hits, 0 misses. 44,798 L not applied.`
+`2 skips: 1 hits, 1 misses. 96,000 L not applied. In misses, moisture dropped as low as 37%.`
 
 ## Model Context Protocol (MCP)
 
@@ -162,6 +175,7 @@ smart-irrigation-system/
 │   ├── cli.py              # Command-line interface and dispatch
 │   ├── clock.py            # Real time and accelerated demo time
 │   ├── config.py           # TOML configuration loader
+│   ├── dashboard.py        # Dashboard screen component
 │   ├── db.py               # SQLite database access and queries
 │   ├── demo.py             # Scripted demo scenario runner
 │   ├── demo_scenario.toml  # Demo weather and sensor events
@@ -174,9 +188,11 @@ smart-irrigation-system/
 │   ├── schema.sql          # SQLite schema
 │   ├── screens.py          # Textual screen components
 │   ├── sensors.py          # Simulated and serial sensor readers
+│   ├── settings_view.py    # Settings screen with validation
 │   ├── valves.py           # Valve safety and state management
 │   ├── weather.py          # Open-Meteo client and cache
-│   └── widgets.py          # UI widgets
+│   ├── widgets.py          # UI widgets
+│   └── zone_view.py        # Zone detail and sparkline view
 └── tests/
     ├── test_calibration.py # Sensor calibration math
     ├── test_db.py          # Database integrity and WAL mode
@@ -202,7 +218,7 @@ Run the test suite with pytest:
 pytest -q
 ```
 
-All 46 tests pass, verifying the decision engine, sensor calibration, database constraints, valve safety rules, rain-check ledger, reports, weather client, and MCP server.
+All 49 tests pass, verifying the decision engine, sensor calibration, database constraints, valve safety rules, rain-check ledger, reports, weather client, and MCP server.
 
 ## Limitations
 
