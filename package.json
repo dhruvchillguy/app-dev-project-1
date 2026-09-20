@@ -2,12 +2,15 @@
   "name": "sinchai",
   "version": "1.0.0",
   "type": "module",
+  "bin": {
+    "sinchai": "./src/cli.js"
+  },
   "scripts": {
-    "start": "node --no-warnings src/index.js run",
-    "demo": "node --no-warnings src/index.js run --demo",
-    "headless": "node --no-warnings src/index.js run --headless --demo",
+    "start": "node --no-warnings --import tsx src/index.js run",
+    "demo": "node --no-warnings --import tsx src/index.js run --demo",
+    "headless": "node --no-warnings --import tsx src/index.js run --headless --demo",
     "mcp": "node --no-warnings src/mcp-server.js",
-    "doctor": "node --no-warnings src/index.js doctor",
+    "doctor": "node --no-warnings --import tsx src/index.js doctor",
     "test": "vitest run"
   },
   "dependencies": {

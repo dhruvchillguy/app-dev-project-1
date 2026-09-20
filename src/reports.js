@@ -1,3 +1,5 @@
+import { getRecentReadings } from "./db.js";
+
 export function waterUsed(db, zoneId, days = 7) {
   const rows = db.prepare(`
     SELECT substr(ts,1,10) as day, SUM(litres) as litres
@@ -31,14 +33,25 @@ export function zoneReport(db, zones, cfg, days = 7) {
     const base = baselineLitres(zone, cfg, days);
     const sh = stressHours(db, zone.id, mn, days);
     rows.push({
-      zone_id: zone.id,
-      name: zone.name,
-      crop: zone.crop,
-      litres_used: used,
-      baseline_litres: base,
-      stress_hours: sh,
-      days
+      zone_id: zone.id, name: zone.name, crop: zone.crop,
+      litres_used: used, baseline_litres: base, stress_hours: sh, days
     });
   }
   return rows;
+}
+
+export function farmBrief(db, zones, cfg) {
+  const lines = [];
+  for (const zone of zones) {
+    const readings = getRecentReadings(db, zone.id, 1);
+    const m = readings[0]?.moisture_pct ?? null;
+    const crop = db.prepare("SELECT * FROM crops WHERE name=?").get(zone.crop);
+    const mn = zone.min_pct != null ? zone.min_pct : (crop?.min_pct ?? 45);
+    if (m === null) lines.push(`${zone.name}: no reading.`);
+    else if (m < mn) lines.push(`${zone.name} (${zone.crop}): moisture ${Math.round(m)}%, needs water.`);
+    else lines.push(`${zone.name} (${zone.crop}): moisture ${Math.round(m)}%, ok.`);
+  }
+  let text = lines.join(" | ");
+  if (text.length > 320) text = text.slice(0, 317) + "...";
+  return text;
 }
