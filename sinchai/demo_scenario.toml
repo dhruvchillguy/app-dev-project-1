@@ -1,0 +1,42 @@
+start_time = "2026-09-20T05:00:00Z"
+base_wind_kmh = 10.0
+
+[[weather_events]]
+at = "2026-09-20T05:00:00Z"
+type = "wind"
+wind_kmh = 10.0
+
+[[weather_events]]
+at = "2026-09-20T06:00:00Z"
+type = "wind"
+wind_kmh = 26.0
+
+[[weather_events]]
+at = "2026-09-20T07:30:00Z"
+type = "wind"
+wind_kmh = 10.0
+
+[[weather_events]]
+at = "2026-09-20T08:00:00Z"
+type = "rain"
+mm = 12.0
+
+[[forecast_events]]
+at = "2026-09-20T05:00:00Z"
+precip_mm = 6.0
+precip_prob = 80
+
+[[forecast_events]]
+at = "2026-09-20T09:00:00Z"
+precip_mm = 0.2
+precip_prob = 20
+
+[[dropout_events]]
+zone_id = 3
+start = "2026-09-20T06:00:00Z"
+end = "2026-09-20T06:20:00Z"
+
+[zone_initial_moisture]
+1 = 58.0
+2 = 43.0
+3 = 90.0
