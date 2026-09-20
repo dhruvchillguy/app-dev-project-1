@@ -51,7 +51,7 @@ def handle_auto(con, zone, rec, cooldowns, cfg):
         return
     if rec["action"] != "IRRIGATE_NOW":
         return
-    last_close = zone.get("last_closed_at")
+    last_close = zone["last_closed_at"]
     if last_close:
         elapsed_min = (now_dt - clock.from_iso(last_close)).total_seconds() / 60.0
         if elapsed_min < cfg["engine"]["cooldown_minutes"]:

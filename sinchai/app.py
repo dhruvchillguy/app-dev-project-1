@@ -57,6 +57,7 @@ class SinchaiApp(App):
         while self._running:
             hb = clock.to_iso(clock.now())
             db.upsert_controller(self.con, os.getpid(), started_at, hb, hb, self.mode, self.source, self.demo, self.speed)
+            self.cfg = config.get_config(self.db_path)
             zones = db.get_zones(self.con)
             if not self.demo:
                 self.weather_data = weather.get_weather(self.con, self.cfg)
@@ -92,6 +93,9 @@ class SinchaiApp(App):
     def action_toggle_mode(self):
         self.mode = "manual" if self.mode == "auto" else "auto"
         self.sub_title = f"{self.source.upper()} | {self.mode.upper()}"
+        if self.con:
+            self.con.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('mode', ?)", (self.mode,))
+            self.con.commit()
         self._refresh_ui()
 
     def action_ack_alerts(self):
