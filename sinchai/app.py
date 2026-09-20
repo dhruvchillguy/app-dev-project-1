@@ -56,6 +56,8 @@ class SinchaiApp(App):
         farm._check_second_controller(self.con)
         farm._recover_valves(self.con)
         zones = db.get_zones(self.con)
+        self.title = "Sinchai"
+        self.sub_title = f"{self.source.upper()} | {self.mode.upper()}"
         self.sensor = SimulatedSensor(zones, self.cfg, self.seed)
         if self.demo:
             self.scenario = demo_mod.setup_demo(self.speed)

@@ -2,43 +2,7 @@ from textual.app import ComposeResult
 from textual.widgets import Static, Sparkline
 from textual.containers import VerticalScroll
 from sinchai import clock, db, engine, ledger, reports
-
-class DashboardScreen(Static):
-    def __init__(self, app_ref):
-        super().__init__()
-        self.app_ref = app_ref
-
-    def compose(self):
-        yield Static(id="status-bar")
-        yield Static("[SIMULATED DATA]", id="sim-banner", classes="visible" if (self.app_ref.demo or self.app_ref.source == "sim") else "")
-        yield VerticalScroll(id="zone-cards")
-
-    def refresh_data(self):
-        con = self.app_ref.con
-        if con is None:
-            return
-        zones = db.get_zones(con)
-        cfg = self.app_ref.cfg
-        now_iso = clock.to_iso(clock.now())
-        local_min = clock.local_minutes(clock.now(), cfg["location"]["utc_offset_minutes"])
-        w = self.app_ref.weather_data
-        cards = self.query_one("#zone-cards")
-        cards.remove_children()
-        for zone in zones:
-            crop = db.get_crop(con, zone["crop"])
-            readings = db.get_recent_readings(con, zone["id"], 24)
-            rec = engine.decide(zone, crop, readings, w, now_iso, local_min, cfg)
-            m = readings[0]["moisture_pct"] if readings else None
-            mn = zone["min_pct"] if zone["min_pct"] is not None else (crop["min_pct"] if crop else 45)
-            label = "LOW" if m is not None and m < mn else ("WET" if m is not None and m > 90 else "OK")
-            v_str = "OPEN" if zone["valve_open"] else "closed"
-            m_str = f"{m:.0f}%" if m is not None else "no data"
-            line1 = f"{zone['name']} | {zone['crop']} | moisture {m_str} ({label}) | valve {v_str}"
-            cards.mount(Static(f"{line1}\n  {rec['action']}: {rec['reason']}", classes="zone-card"))
-        open_c = sum(1 for z in zones if z["valve_open"])
-        w_src = w["source"].upper() if w else "OFFLINE"
-        status = f"SIM | weather {w_src} | mode {self.app_ref.mode.upper()} | {open_c} open | {now_iso[:19]}"
-        self.query_one("#status-bar").update(status)
+from sinchai.dashboard import DashboardScreen
 
 class ZoneScreen(Static):
     def __init__(self, app_ref):

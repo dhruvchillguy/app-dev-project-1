@@ -21,40 +21,21 @@ Screen {
     display: block;
 }
 
-ZoneCard {
-    height: 7;
-    border: solid $primary;
-    margin: 0 1 1 1;
+#zone-table {
+    height: 6;
+    margin: 0 1;
+}
+
+#weather-panel {
+    height: 2;
     padding: 0 1;
+    color: $accent;
 }
 
-ZoneCard.critical {
-    border: solid $error;
-}
-
-ZoneCard.irrigating {
-    border: solid $success;
-}
-
-#alerts-list {
-    height: 100%;
+#alerts-feed {
+    height: 1fr;
+    padding: 0 1;
     overflow-y: auto;
-}
-
-.alert-critical {
-    color: $error;
-}
-
-.alert-warning {
-    color: $warning;
-}
-
-.alert-info {
-    color: $primary;
-}
-
-#moisture-bar {
-    width: 20;
 }
 
 TabbedContent {
