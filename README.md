@@ -147,3 +147,5 @@ smart-irrigation-system/
 ## AI Assistance
 
 This project was built with the assistance of an AI coding assistant (Google DeepMind Antigravity).
+
+The complete, chronological record of all prompts, development iterations, and assistant responses is documented in [AI_CHAT_TRANSCRIPT.md](./AI_CHAT_TRANSCRIPT.md).
