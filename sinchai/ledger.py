@@ -20,7 +20,7 @@ def maybe_open_skip(con, zone, rec, cfg):
     litres = hours * zone["flow_mm_hr"] * zone["area_m2"]
     con.execute(
         "INSERT INTO skips (zone_id,decided_at,forecast_mm,forecast_prob,deadline_at,litres_withheld) VALUES (?,?,?,?,?,?)",
-        (zone["id"], ts, 0.0, 0.0, deadline, litres),
+        (zone["id"], ts, rec.get("forecast_mm", 0.0), rec.get("forecast_prob", 0.0), deadline, litres),
     )
     con.commit()
     log.info("skip opened zone=%d deadline=%s", zone["id"], deadline)

@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import time
@@ -24,20 +25,15 @@ def _seed_data(con, cfg):
 
 def _check_second_controller(con):
     row = db.get_controller_row(con)
-    if row is None:
-        return
-    age = (clock.now() - clock.from_iso(row["heartbeat_at"])).total_seconds()
-    if age < 10:
+    if row and (clock.now() - clock.from_iso(row["heartbeat_at"])).total_seconds() < 10:
         raise RuntimeError("Another controller is already running")
 
 
 def _recover_valves(con):
-    row = db.get_controller_row(con)
-    if row is None:
-        return
-    closed = db.close_all_valves(con, clock.to_iso(clock.now()), "failsafe")
-    if closed:
-        log.warning("unclean shutdown: closed %d valves on recovery", closed)
+    if db.get_controller_row(con):
+        closed = db.close_all_valves(con, clock.to_iso(clock.now()), "failsafe")
+        if closed:
+            log.warning("unclean shutdown: closed %d valves on recovery", closed)
 
 
 def _apply_pending_requests(con, zones, cfg):
@@ -90,6 +86,9 @@ def run_headless(db_path, cfg, mode, demo, speed, seed, source, ticks_limit):
     scenario = demo_mod.setup_demo(speed) if demo else None
     zones = db.get_zones(con)
     sensor = SimulatedSensor(zones, cfg, seed)
+    if scenario and "zone_initial_moisture" in scenario:
+        for zid, m in scenario["zone_initial_moisture"].items():
+            sensor.moisture[int(zid)] = float(m)
     started_at = clock.to_iso(clock.now())
     tick_count = 0
     w = None
@@ -101,10 +100,14 @@ def run_headless(db_path, cfg, mode, demo, speed, seed, source, ticks_limit):
             if not demo:
                 w = weather.get_weather(con, cfg)
             elif scenario:
-                wkm, _ = demo_mod.get_demo_weather_at(scenario, clock.now())
-                w = {"wind_kmh": wkm, "temperature_c": 30.0, "current_precip_mm": 0.0,
-                     "hourly_times": [], "hourly_precip_mm": [], "hourly_precip_prob": [],
-                     "hourly_evaporation_mm": [], "hourly_wind_kmh": [], "hourly_temp_c": [],
+                wkm, r_mm = demo_mod.get_demo_weather_at(scenario, clock.now())
+                if r_mm > 0:
+                    db.upsert_rain_obs(con, hb[:13] + ":00:00Z", r_mm)
+                f_mm, f_prob = demo_mod.get_demo_forecast_at(scenario, clock.now())
+                times = [clock.to_iso(clock.now() + datetime.timedelta(hours=i)) for i in range(1, 13)]
+                w = {"wind_kmh": wkm, "temperature_c": 30.0, "current_precip_mm": r_mm,
+                     "hourly_times": times, "hourly_precip_mm": [f_mm / 12.0] * 12, "hourly_precip_prob": [f_prob] * 12,
+                     "hourly_evaporation_mm": [0.3] * 12, "hourly_wind_kmh": [wkm] * 12, "hourly_temp_c": [30.0] * 12,
                      "source": "scripted", "fetched_at": hb}
             tick(con, zones, sensor, w, mode, demo, scenario, cfg)
             tick_count += 1

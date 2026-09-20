@@ -100,7 +100,7 @@ def decide(zone, crop, readings, weather, now_iso, local_min, cfg):
     override = ""
 
     if rain_ex and not is_crit:
-        return {"action": "SKIP_RAIN", "minutes": mins, "reason": f"rain forecast {rain_mm:.1f}mm {rain_prob:.0f}%{cap}", "hours_until": 0.0, "trace": trace}
+        return {"action": "SKIP_RAIN", "minutes": mins, "reason": f"rain forecast {rain_mm:.1f}mm {rain_prob:.0f}%{cap}", "hours_until": 0.0, "trace": trace, "forecast_mm": rain_mm, "forecast_prob": rain_prob}
     if rain_ex and is_crit:
         override = " (critical, irrigating despite rain forecast)"
 

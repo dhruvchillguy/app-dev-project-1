@@ -1,3 +1,4 @@
+import datetime
 import threading
 from textual.app import App, ComposeResult
 from textual.widgets import Footer, Header, TabbedContent, TabPane
@@ -58,6 +59,8 @@ class SinchaiApp(App):
         self.sensor = SimulatedSensor(zones, self.cfg, self.seed)
         if self.demo:
             self.scenario = demo_mod.setup_demo(self.speed)
+            for zid, m in self.scenario.get("zone_initial_moisture", {}).items():
+                self.sensor.moisture[int(zid)] = float(m)
         self._running = True
         self._tick_thread = threading.Thread(target=self._run_loop, daemon=True)
         self._tick_thread.start()
@@ -74,10 +77,14 @@ class SinchaiApp(App):
             if not self.demo:
                 self.weather_data = weather.get_weather(self.con, self.cfg)
             elif self.scenario:
-                wkm, _ = demo_mod.get_demo_weather_at(self.scenario, clock.now())
-                self.weather_data = {"wind_kmh": wkm, "temperature_c": 30.0, "current_precip_mm": 0.0,
-                                     "hourly_times": [], "hourly_precip_mm": [], "hourly_precip_prob": [],
-                                     "hourly_evaporation_mm": [], "hourly_wind_kmh": [], "hourly_temp_c": [],
+                wkm, r_mm = demo_mod.get_demo_weather_at(self.scenario, clock.now())
+                if r_mm > 0:
+                    db.upsert_rain_obs(self.con, hb[:13] + ":00:00Z", r_mm)
+                f_mm, f_prob = demo_mod.get_demo_forecast_at(self.scenario, clock.now())
+                times = [clock.to_iso(clock.now() + datetime.timedelta(hours=i)) for i in range(1, 13)]
+                self.weather_data = {"wind_kmh": wkm, "temperature_c": 30.0, "current_precip_mm": r_mm,
+                                     "hourly_times": times, "hourly_precip_mm": [f_mm / 12.0] * 12, "hourly_precip_prob": [f_prob] * 12,
+                                     "hourly_evaporation_mm": [0.3] * 12, "hourly_wind_kmh": [wkm] * 12, "hourly_temp_c": [30.0] * 12,
                                      "source": "scripted", "fetched_at": hb}
             farm.tick(self.con, zones, self.sensor, self.weather_data, self.mode, self.demo, self.scenario, self.cfg)
             time.sleep(0.1 if self.demo else self.cfg["sensor"]["poll_seconds"])

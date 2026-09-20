@@ -1,20 +1,16 @@
 import json
 import logging
 import time
-
 import httpx
-
 from sinchai import clock, db
 
 log = logging.getLogger(__name__)
 _next_fetch = 0.0
 
-
 def _cache_key(cfg):
     lat = round(cfg["location"]["latitude"], 2)
     lon = round(cfg["location"]["longitude"], 2)
     return f"{lat},{lon}"
-
 
 def _parse(payload_str):
     data = json.loads(payload_str)
@@ -35,13 +31,10 @@ def _parse(payload_str):
         "source": "live",
     }
 
-
 def _fetch_live(cfg):
-    lat = cfg["location"]["latitude"]
-    lon = cfg["location"]["longitude"]
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
-        "latitude": lat, "longitude": lon,
+        "latitude": cfg["location"]["latitude"], "longitude": cfg["location"]["longitude"],
         "current": "temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation",
         "hourly": "precipitation_probability,precipitation,et0_fao_evapotranspiration,wind_speed_10m,temperature_2m",
         "forecast_days": 2, "past_days": 1, "timezone": "auto",
@@ -50,13 +43,11 @@ def _fetch_live(cfg):
     resp.raise_for_status()
     return resp.text
 
-
 def store_rain_obs(con, weather):
     for i, ts in enumerate(weather["hourly_times"]):
         mm = weather["hourly_precip_mm"][i]
         if mm is not None:
             db.upsert_rain_obs(con, ts, mm)
-
 
 def get_weather(con, cfg, force=False):
     global _next_fetch
@@ -64,20 +55,16 @@ def get_weather(con, cfg, force=False):
     cached = db.get_weather_cache(con, key)
     max_age_h = cfg["engine"]["weather_max_age_hours"]
     now_iso = clock.to_iso(clock.now())
-
     if cached and not force:
         age_h = (clock.from_iso(now_iso) - clock.from_iso(cached["fetched_at"])).total_seconds() / 3600.0
         if age_h < cfg["weather"]["refresh_minutes"] / 60.0:
             w = _parse(cached["payload"])
             w["source"] = "cached"
             return w
-        if age_h < max_age_h:
-            pass
-        else:
+        if age_h >= max_age_h:
             w = _parse(cached["payload"])
             w["source"] = "cached_stale"
             log.warning("weather cache older than %s h, using stale", max_age_h)
-
     real_now = time.time()
     if real_now < _next_fetch and not force:
         if cached:
@@ -85,7 +72,6 @@ def get_weather(con, cfg, force=False):
             w["source"] = "cached"
             return w
         return None
-
     try:
         payload = _fetch_live(cfg)
         db.upsert_weather_cache(con, key, now_iso, payload)
@@ -104,14 +90,13 @@ def get_weather(con, cfg, force=False):
             return w
         return None
 
-
 def scripted_weather(scenario):
     h = scenario.get("weather_hourly", {})
     times = h.get("times", [])
     return {
         "fetched_at": clock.to_iso(clock.now()),
         "temperature_c": scenario.get("temperature_c", 30.0),
-        "wind_kmh": scenario.get("wind_kmh", 10.0),
+        "wind_kmh": scenario.get("wind_speed_10m", 10.0),
         "current_precip_mm": 0.0,
         "hourly_times": times,
         "hourly_precip_mm": h.get("precip_mm", [0.0] * len(times)),

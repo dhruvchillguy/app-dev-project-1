@@ -27,7 +27,8 @@ def get_demo_weather_at(scenario, now_dt):
             if ev.get("type") == "wind":
                 wind = ev.get("wind_kmh", wind)
             if ev.get("type") == "rain":
-                rain_mm = ev.get("mm", 0.0)
+                if 0 <= (now_dt - ev_dt).total_seconds() < 3600:
+                    rain_mm = ev.get("mm", 0.0)
     return wind, rain_mm
 
 
