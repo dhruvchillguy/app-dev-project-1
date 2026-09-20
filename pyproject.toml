@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sinchai"
+version = "0.1.0"
+description = "Smart irrigation terminal application for precision farming"
+requires-python = ">=3.11"
+dependencies = [
+    "textual>=0.80.0",
+    "mcp[cli]>=1.0.0",
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+hardware = ["pyserial>=3.5"]
+dev = [
+    "pyserial>=3.5",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+[project.scripts]
+sinchai = "sinchai.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sinchai*"]
+
+[tool.setuptools.package-data]
+sinchai = ["defaults.toml", "schema.sql", "demo_scenario.toml", "app.tcss"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
