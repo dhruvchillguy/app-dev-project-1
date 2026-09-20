@@ -23,7 +23,15 @@ export function seedData(db, cfg) {
 
 export function checkSecondController(db) {
   const row = getControllerRow(db);
-  if (row && (now() - fromIso(row.heartbeat_at)) / 1000.0 < 10) {
+  if (!row) return;
+  let isAlive = true;
+  try {
+    process.kill(row.pid, 0);
+  } catch {
+    isAlive = false;
+  }
+  const diff = (now() - fromIso(row.heartbeat_at)) / 1000.0;
+  if (isAlive && diff >= 0 && diff < 10) {
     throw new Error("Another controller is already running");
   }
 }
@@ -66,9 +74,9 @@ export function tick(db, zones, sensor, w, mode, demo, scenario, cfg) {
 export async function runHeadless(dbPath, cfg, mode, demo, speed, seed, source, ticksLimit) {
   const db = openDb(dbPath, "src/schema.sql");
   seedData(db, cfg);
+  const scenario = demo ? setupDemo(speed) : null;
   checkSecondController(db);
   recoverValves(db);
-  const scenario = demo ? setupDemo(speed) : null;
   const zones = getZones(db);
   const sensor = new SimulatedSensor(zones, cfg, seed);
   if (scenario && scenario.zone_initial_moisture) {
