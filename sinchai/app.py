@@ -91,13 +91,10 @@ class SinchaiApp(App):
 
     def _refresh_ui(self):
         for screen_id in ("dashboard", "zones", "reports", "raincheck"):
-            try:
-                pane = self.query_one(f"#{screen_id}")
-                screen = pane.query_one("*")
-                if hasattr(screen, "refresh_data"):
-                    screen.refresh_data()
-            except Exception:
-                pass
+            pane = self.query_one(f"#{screen_id}")
+            for child in pane.children:
+                if hasattr(child, "refresh_data"):
+                    child.refresh_data()
 
     def action_switch_tab(self, tab_id):
         self.query_one("#tabs").active = tab_id

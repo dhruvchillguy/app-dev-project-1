@@ -25,7 +25,7 @@ class DashboardScreen(Static):
         cards = self.query_one("#zone-cards")
         cards.remove_children()
         for zone in zones:
-            crop = db.get_crop(con, zone["id"])
+            crop = db.get_crop(con, zone["crop"])
             readings = db.get_recent_readings(con, zone["id"], 24)
             rec = engine.decide(zone, crop, readings, w, now_iso, local_min, cfg)
             m = readings[0]["moisture_pct"] if readings else None
@@ -38,10 +38,7 @@ class DashboardScreen(Static):
         open_c = sum(1 for z in zones if z["valve_open"])
         w_src = w["source"].upper() if w else "OFFLINE"
         status = f"SIM | weather {w_src} | mode {self.app_ref.mode.upper()} | {open_c} open | {now_iso[:19]}"
-        try:
-            self.query_one("#status-bar").update(status)
-        except Exception:
-            pass
+        self.query_one("#status-bar").update(status)
 
 class ZoneScreen(Static):
     def __init__(self, app_ref):
