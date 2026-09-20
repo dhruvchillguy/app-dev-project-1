@@ -8,7 +8,7 @@ DEFAULT_DB_PATH = "data/sinchai.db"
 def open_db(path, query_only=False):
     db_file = pathlib.Path(path)
     db_file.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(str(db_file))
+    con = sqlite3.connect(str(db_file), check_same_thread=False)
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys=ON")
     con.execute("PRAGMA journal_mode=WAL")
